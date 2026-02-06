@@ -1,36 +1,133 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎯 FeedbackBox
 
-## Getting Started
+**Beautiful, drop-in user feedback widget for your website**
 
-First, run the development server:
+A modern SaaS tool that lets you collect user feedback with a single line of code. Features a stunning glass morphism design with dark theme and green accents.
+
+## ✨ Features
+
+- **Lightning Fast Setup**: Copy-paste one line of code
+- **Beautiful Design**: Modern glass morphism UI that blends with any website
+- **Organized Feedback**: Filter by bugs, features, or praise
+- **CSV Export**: Export all feedback with one click
+- **No Database Required**: Uses localStorage for MVP simplicity
+- **Responsive**: Works perfectly on desktop and mobile
+
+## 🚀 Live Demo
+
+**Website**: https://feedbackbox-alpha.vercel.app
+
+## 📦 Tech Stack
+
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Deployment**: Vercel
+- **Storage**: LocalStorage (MVP)
+
+## 🎨 Pages
+
+1. **Landing Page** (`/`) - Hero, features, and pricing
+2. **Dashboard** (`/dashboard`) - Create projects and manage feedback
+3. **Widget** (`/widget.js`) - Embeddable JavaScript snippet
+
+## 🔧 Local Development
 
 ```bash
+# Install dependencies
+npm install
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📝 How to Use
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Create a Project
+Visit the [dashboard](https://feedbackbox-alpha.vercel.app/dashboard) and create a new project.
 
-## Learn More
+### 2. Get Your Widget Code
+Copy the widget code snippet provided in the dashboard.
 
-To learn more about Next.js, take a look at the following resources:
+### 3. Add to Your Website
+Paste the code before the closing `</body>` tag:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```html
+<script src="https://feedbackbox-alpha.vercel.app/widget.js?project=YOUR_PROJECT_ID"></script>
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 4. Collect Feedback
+A floating feedback button will appear on your site. Users can submit:
+- 🐛 Bug reports
+- ✨ Feature requests
+- ❤️ Praise
 
-## Deploy on Vercel
+### 5. View & Export
+See all feedback in your dashboard, filter by type, and export to CSV.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 💎 Pricing
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Free Plan**
+- 1 project
+- Up to 50 feedback entries
+- Basic filtering
+
+**Pro Plan - $9/month**
+- Unlimited projects
+- Unlimited feedback
+- Advanced filtering
+- CSV export
+- Priority support
+
+## 🎯 Design Philosophy
+
+- **Simple**: One line of code to install
+- **Beautiful**: Glass morphism design that works everywhere
+- **Fast**: Optimized for performance
+- **Private**: Your data stays with you (localStorage)
+
+## 📸 Screenshots
+
+### Landing Page
+Beautiful hero section with pricing and features
+
+### Dashboard
+Intuitive project management and feedback viewing
+
+### Widget
+Floating button that opens a beautiful feedback form
+
+## 🔮 Future Enhancements
+
+- Real database (PostgreSQL/Supabase)
+- Email notifications
+- Custom branding
+- Analytics dashboard
+- API access
+- Webhooks
+- Team collaboration
+- Dark/light theme toggle
+
+## 📄 License
+
+MIT License - feel free to use for your projects!
+
+## 🤝 Contributing
+
+This is an MVP built for a hackathon. Contributions welcome!
+
+## 👨‍💻 Author
+
+Built with ❤️ by [tahseen137](https://github.com/tahseen137)
+
+---
+
+**Ready to listen to your users? [Get Started →](https://feedbackbox-alpha.vercel.app)**
