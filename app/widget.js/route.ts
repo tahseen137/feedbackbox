@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   const widgetCode = `
 (function() {
   const projectId = '${projectId}';
-  const apiUrl = '${process.env.NEXT_PUBLIC_API_URL || request.nextUrl.origin}';
+  const apiUrl = '${process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin}';
 
   // Create and inject styles
   const style = document.createElement('style');
@@ -59,6 +59,12 @@ export async function GET(request: NextRequest) {
 
     #feedbackbox-modal.active {
       display: flex;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     #feedbackbox-modal-content {
@@ -71,6 +77,18 @@ export async function GET(request: NextRequest) {
       width: 100%;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
       position: relative;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
     }
 
     #feedbackbox-close {
@@ -207,12 +225,12 @@ export async function GET(request: NextRequest) {
       box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
     }
 
-    #feedbackbox-submit:hover {
+    #feedbackbox-submit:hover:not(:disabled) {
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(16, 185, 129, 0.6);
     }
 
-    #feedbackbox-submit:active {
+    #feedbackbox-submit:active:not(:disabled) {
       transform: translateY(0);
     }
 
@@ -256,6 +274,16 @@ export async function GET(request: NextRequest) {
       font-size: 14px;
       margin: 0;
     }
+
+    .feedbackbox-error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
   \`;
   document.head.appendChild(style);
 
@@ -266,14 +294,17 @@ export async function GET(request: NextRequest) {
   // Create button
   const button = document.createElement('button');
   button.id = 'feedbackbox-button';
+  button.setAttribute('aria-label', 'Open feedback form');
   button.innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>';
   
   // Create modal
   const modal = document.createElement('div');
   modal.id = 'feedbackbox-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
   modal.innerHTML = \`
     <div id="feedbackbox-modal-content">
-      <button id="feedbackbox-close">
+      <button id="feedbackbox-close" aria-label="Close feedback form">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
@@ -284,13 +315,13 @@ export async function GET(request: NextRequest) {
         
         <div class="feedbackbox-type-selector">
           <button type="button" class="feedbackbox-type-button active" data-type="feature">
-            Feature
+            ✨ Feature
           </button>
           <button type="button" class="feedbackbox-type-button" data-type="bug">
-            Bug
+            🐛 Bug
           </button>
           <button type="button" class="feedbackbox-type-button" data-type="praise">
-            Praise
+            ❤️ Praise
           </button>
         </div>
 
@@ -326,15 +357,17 @@ export async function GET(request: NextRequest) {
   });
 
   const closeBtn = modal.querySelector('#feedbackbox-close');
-  closeBtn.addEventListener('click', () => {
-    modal.classList.remove('active');
-  });
+  closeBtn.addEventListener('click', closeModal);
 
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {
-      modal.classList.remove('active');
+      closeModal();
     }
   });
+
+  function closeModal() {
+    modal.classList.remove('active');
+  }
 
   // Type selector
   const typeButtons = modal.querySelectorAll('.feedbackbox-type-button');
@@ -360,23 +393,32 @@ export async function GET(request: NextRequest) {
 
     if (!message) return;
 
+    // Remove any existing error messages
+    const existingError = form.querySelector('.feedbackbox-error');
+    if (existingError) existingError.remove();
+
     submitBtn.disabled = true;
     submitBtn.textContent = 'Sending...';
 
-    // Store feedback in localStorage (since we're using localStorage for MVP)
-    const feedback = {
-      id: 'fb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-      projectId: projectId,
-      type: selectedType,
-      message: message,
-      email: email || undefined,
-      timestamp: Date.now()
-    };
-
     try {
-      const existingFeedback = JSON.parse(localStorage.getItem('feedbackbox_feedback') || '[]');
-      existingFeedback.push(feedback);
-      localStorage.setItem('feedbackbox_feedback', JSON.stringify(existingFeedback));
+      const response = await fetch(\`\${apiUrl}/api/feedback\`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          projectId: projectId,
+          type: selectedType,
+          message: message,
+          email: email || undefined,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit feedback');
+      }
 
       // Show success message
       const content = modal.querySelector('#feedbackbox-content');
@@ -392,36 +434,67 @@ export async function GET(request: NextRequest) {
         </div>
       \`;
 
+      // Reset form and close modal after 2 seconds
       setTimeout(() => {
-        modal.classList.remove('active');
-        // Reset form after modal closes
-        setTimeout(() => {
-          content.innerHTML = \`
-            <h2 id="feedbackbox-title">Share Your Feedback</h2>
-            <p id="feedbackbox-subtitle">Help us improve by sharing your thoughts</p>
-            
-            <div class="feedbackbox-type-selector">
-              <button type="button" class="feedbackbox-type-button active" data-type="feature">Feature</button>
-              <button type="button" class="feedbackbox-type-button" data-type="bug">Bug</button>
-              <button type="button" class="feedbackbox-type-button" data-type="praise">Praise</button>
-            </div>
+        closeModal();
+        messageInput.value = '';
+        emailInput.value = '';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Feedback';
+        
+        // Reset to form view
+        content.innerHTML = \`
+          <h2 id="feedbackbox-title">Share Your Feedback</h2>
+          <p id="feedbackbox-subtitle">Help us improve by sharing your thoughts</p>
+          
+          <div class="feedbackbox-type-selector">
+            <button type="button" class="feedbackbox-type-button active" data-type="feature">
+              ✨ Feature
+            </button>
+            <button type="button" class="feedbackbox-type-button" data-type="bug">
+              🐛 Bug
+            </button>
+            <button type="button" class="feedbackbox-type-button" data-type="praise">
+              ❤️ Praise
+            </button>
+          </div>
 
-            <form id="feedbackbox-form">
-              <textarea id="feedbackbox-message" placeholder="Tell us what's on your mind..." required></textarea>
-              <input id="feedbackbox-email" type="email" placeholder="Your email (optional)" />
-              <button type="submit" id="feedbackbox-submit">Send Feedback</button>
-            </form>
-          \`;
-          // Re-attach event listeners would be needed here for a production version
-          location.reload(); // Simple solution for MVP
-        }, 300);
+          <form id="feedbackbox-form">
+            <textarea 
+              id="feedbackbox-message" 
+              placeholder="Tell us what's on your mind..."
+              required
+            ></textarea>
+            <input 
+              id="feedbackbox-email" 
+              type="email" 
+              placeholder="Your email (optional)"
+            />
+            <button type="submit" id="feedbackbox-submit">
+              Send Feedback
+            </button>
+          </form>
+        \`;
       }, 2000);
 
     } catch (error) {
       console.error('Error submitting feedback:', error);
+      
+      // Show error message
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'feedbackbox-error';
+      errorDiv.textContent = error.message || 'Failed to send feedback. Please try again.';
+      form.insertBefore(errorDiv, form.firstChild);
+      
       submitBtn.disabled = false;
       submitBtn.textContent = 'Send Feedback';
-      alert('Failed to send feedback. Please try again.');
+    }
+  });
+
+  // Escape key to close
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('active')) {
+      closeModal();
     }
   });
 })();
